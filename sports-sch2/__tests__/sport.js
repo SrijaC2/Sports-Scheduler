@@ -95,6 +95,37 @@ describe("Sport Application", function () {
     expect(parseRes).toBe(true);
   });
 
+  test("Edit a Sport", async () => {
+    const agent = request.agent(server);
+    await login(agent, "user.a@test.com", "12345678");
+    let res = await agent.get("/sport");
+    res = await agent.get("/createSport");
+    let csrfToken = extractCsrfToken(res);
+    await agent.post("/sport").send({
+      title: "Badminton",
+      _csrf: csrfToken,
+    });
+    const groupedTodosResponse1 = await agent
+      .get("/sport")
+      .set("Accept", "application/json");
+    let parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+    const NoOfSports = parsedGroupedResponse.allSports.length;
+    const latestSport = parsedGroupedResponse.allSports[NoOfSports - 1];
+    res = await agent.get(`/sport/${latestSport.id}`);
+    res = await agent.get(`/sport/edit/${latestSport.id}`);
+    csrfToken = extractCsrfToken(res);
+    res = await agent.post(`/sport/${latestSport.id}`).send({
+      title: "Badminton2",
+      _csrf: csrfToken,
+    });
+    const groupedTodosResponse = await agent
+      .get(`/sport/${latestSport.id}`)
+      .set("Accept", "application/json");
+    parsedGroupedResponse = JSON.parse(groupedTodosResponse.text);
+    const Title = parsedGroupedResponse.sport.title;
+    expect(Title).toBe("Badminton2");
+  });
+
   test("Fetches all Sports in the database using /sport endpoint", async () => {
     const agent = request.agent(server);
     await login(agent, "user.a@test.com", "12345678");
@@ -160,7 +191,7 @@ describe("Sport Application", function () {
     expect(res.statusCode).toBe(302);
   });
 
-  test("Fetches all Pariticular sport Sessions ", async () => {
+  test("Fetches all Pariticular sport Sessions created by user ", async () => {
     const agent = request.agent(server);
     await login(agent, "user.a@test.com", "12345678");
     let res = await agent.get("/sport");
@@ -211,6 +242,61 @@ describe("Sport Application", function () {
       .set("Accept", "application/json");
     parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
     const NoOfSportSessions2 = parsedGroupedResponse.allSessionPart.length;
+    expect(NoOfSportSessions2).toBe(NoOfSportSessions + 1);
+  });
+
+  test("Fetches all upcoming Sessions of a particular sport", async () => {
+    const agent = request.agent(server);
+    await login(agent, "user.a@test.com", "12345678");
+    let res = await agent.get("/sport");
+    res = await agent.get("/createSport");
+    let csrfToken = extractCsrfToken(res);
+    await agent.post("/sport").send({
+      title: "Cricket",
+      _csrf: csrfToken,
+    });
+    let groupedTodosResponse1 = await agent
+      .get("/sport")
+      .set("Accept", "application/json");
+    let parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+    const NoOfSports = parsedGroupedResponse.allSports.length;
+    const latestSport = parsedGroupedResponse.allSports[NoOfSports - 1];
+    res = await agent.get(`/sport/${latestSport.id}`);
+    res = await agent.get(`/sport/sessions/${latestSport.id}`);
+    csrfToken = extractCsrfToken(res);
+    const dateToday = new Date();
+    res = await agent.post(`/createSession/${latestSport.id}`).send({
+      sessionName: "Cricket Session #1",
+      date: new Date(new Date().setDate(dateToday.getDate() + 1)).toISOString(),
+      time: "15:41:00",
+      venue: "Hyderabad",
+      names: "Sneha,Ankith",
+      playersNeeded: 2,
+      _csrf: csrfToken,
+    });
+    groupedTodosResponse1 = await agent
+      .get(`/sport/${latestSport.id}`)
+      .set("Accept", "application/json");
+    parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+    const NoOfSportSessions = parsedGroupedResponse.allUpcoming.length;
+
+    res = await agent.get(`/sport/${latestSport.id}`);
+    res = await agent.get(`/sport/sessions/${latestSport.id}`);
+    csrfToken = extractCsrfToken(res);
+    res = await agent.post(`/createSession/${latestSport.id}`).send({
+      sessionName: "Cricket Session #2",
+      date: new Date(new Date().setDate(dateToday.getDate() + 1)).toISOString(),
+      time: "17:41:00",
+      venue: "Hyderabad",
+      names: "Sneha,Priya",
+      playersNeeded: 2,
+      _csrf: csrfToken,
+    });
+    groupedTodosResponse1 = await agent
+      .get(`/sport/${latestSport.id}`)
+      .set("Accept", "application/json");
+    parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+    const NoOfSportSessions2 = parsedGroupedResponse.allUpcoming.length;
     expect(NoOfSportSessions2).toBe(NoOfSportSessions + 1);
   });
 });

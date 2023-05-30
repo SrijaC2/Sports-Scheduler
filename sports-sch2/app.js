@@ -120,6 +120,7 @@ app.get(
       } else {
         response.json({
           allSports,
+          allUpcoming,
         });
       }
     } catch (error) {
@@ -301,6 +302,8 @@ app.get(
     } else {
       response.json({
         allSessionPart,
+        allUpcoming,
+        sport,
       });
     }
   }
