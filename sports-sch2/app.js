@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 const { request, response } = require("express");
 const express = require("express");
@@ -61,7 +62,6 @@ passport.use(
             return done(null, false, { message: "Invalid password" });
           }
         })
-        // eslint-disable-next-line n/handle-callback-err
         .catch((error) => {
           return done(null, false, {
             message: "Your account doesn't exist, try signing up",
@@ -329,7 +329,13 @@ app.delete(
   async (request, response) => {
     console.log("Delete a sport by ID: ", request.params.id);
     try {
+      const session = await Sessions.SportSessions(request.params.id);
+      const sessionIDs = session.map((v) => v.id);
+
+      await playerSessions.deleteSession(sessionIDs);
+      await Sessions.deleteSession(request.params.id);
       await Sport.remove(request.params.id);
+
       return response.json({ success: true });
     } catch (error) {
       console.log(error);
