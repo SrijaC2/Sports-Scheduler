@@ -68,6 +68,33 @@ describe("Sport Application", function () {
     expect(response.statusCode).toBe(302);
   });
 
+  test("Deletes a sport", async () => {
+    const agent = request.agent(server);
+    await login(agent, "user.a@test.com", "12345678");
+    let res = await agent.get("/sport");
+    res = await agent.get("/createSport");
+    let csrfToken = extractCsrfToken(res);
+    await agent.post("/sport").send({
+      title: "Badminton",
+      _csrf: csrfToken,
+    });
+    const groupedTodosResponse1 = await agent
+      .get("/sport")
+      .set("Accept", "application/json");
+    const parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+    const NoOfSports = parsedGroupedResponse.allSports.length;
+    const latestSport = parsedGroupedResponse.allSports[NoOfSports - 1];
+    res = await agent.get(`/sport/${latestSport.id}`);
+    csrfToken = extractCsrfToken(res);
+    const DeletedResponse = await agent
+      .delete(`/sport/${latestSport.id}`)
+      .send({
+        _csrf: csrfToken,
+      });
+    const parseRes = Boolean(DeletedResponse.text);
+    expect(parseRes).toBe(true);
+  });
+
   test("Fetches all Sports in the database using /sport endpoint", async () => {
     const agent = request.agent(server);
     await login(agent, "user.a@test.com", "12345678");
