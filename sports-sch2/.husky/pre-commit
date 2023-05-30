@@ -3,3 +3,4 @@
 
 cd sports-sch2  && npm test
 npx lint-staged
+
