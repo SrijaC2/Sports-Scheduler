@@ -586,14 +586,20 @@ app.get(
       request.params.sportId
     );
     const allPrevious = await Sessions.PrevSessions(allSportSessions);
-    try {
-      response.render("prevSession", {
-        csrfToken: request.csrfToken(),
-        sport,
+    if (request.accepts("html")) {
+      try {
+        response.render("prevSession", {
+          csrfToken: request.csrfToken(),
+          sport,
+          allPrevious,
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      response.json({
         allPrevious,
       });
-    } catch (error) {
-      console.log(error);
     }
   }
 );
