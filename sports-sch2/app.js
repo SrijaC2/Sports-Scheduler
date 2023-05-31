@@ -390,13 +390,19 @@ app.get(
     const userId = request.user.id;
     console.log("Players", Players);
     try {
-      response.render("particularSession", {
-        title: Session.sessionName,
-        Session,
-        Players,
-        userId,
-        csrfToken: request.csrfToken(),
-      });
+      if (request.accepts("html")) {
+        response.render("particularSession", {
+          title: Session.sessionName,
+          Session,
+          Players,
+          userId,
+          csrfToken: request.csrfToken(),
+        });
+      } else {
+        response.json({
+          Players,
+        });
+      }
     } catch (error) {
       console.log(error);
     }
