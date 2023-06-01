@@ -406,6 +406,7 @@ app.get(
       response.json({
         Players,
         cs,
+        Session,
       });
     }
   }
