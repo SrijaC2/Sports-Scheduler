@@ -389,8 +389,9 @@ app.get(
     const Players = await playerSessions.getPlayers(Session.id);
     const userId = request.user.id;
     console.log("Players", Players);
-    try {
-      if (request.accepts("html")) {
+    const cs = request.csrfToken();
+    if (request.accepts("html")) {
+      try {
         response.render("particularSession", {
           title: Session.sessionName,
           Session,
@@ -398,13 +399,14 @@ app.get(
           userId,
           csrfToken: request.csrfToken(),
         });
-      } else {
-        response.json({
-          Players,
-        });
+      } catch (error) {
+        console.log(error);
       }
-    } catch (error) {
-      console.log(error);
+    } else {
+      response.json({
+        Players,
+        cs,
+      });
     }
   }
 );

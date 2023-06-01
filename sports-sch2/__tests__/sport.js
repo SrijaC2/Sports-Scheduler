@@ -371,6 +371,7 @@ describe("Sport Application", function () {
     let parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
     const NoOfSports = parsedGroupedResponse.allSports.length;
     const latestSport = parsedGroupedResponse.allSports[NoOfSports - 1];
+
     res = await agent.get(`/sport/${latestSport.id}`);
     res = await agent.get(`/sport/sessions/${latestSport.id}`);
     csrfToken = extractCsrfToken(res);
@@ -402,6 +403,71 @@ describe("Sport Application", function () {
     csrfToken = extractCsrfToken(res);
     const DeletedResponse = await agent
       .delete(`/playerSession/${latestPlayer.id}`)
+      .send({
+        _csrf: csrfToken,
+      });
+    const parseRes = Boolean(DeletedResponse.text);
+    expect(parseRes).toBe(true);
+  });
+
+  test("Joining and Leaving in the particular session", async () => {
+    const agent = request.agent(server);
+    await login(agent, "user.a@test.com", "12345678");
+    let res = await agent.get("/sport");
+    res = await agent.get("/createSport");
+    let csrfToken = extractCsrfToken(res);
+    await agent.post("/sport").send({
+      title: "Cricket",
+      _csrf: csrfToken,
+    });
+    let groupedTodosResponse1 = await agent
+      .get("/sport")
+      .set("Accept", "application/json");
+    let parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+    const NoOfSports = parsedGroupedResponse.allSports.length;
+    const latestSport = parsedGroupedResponse.allSports[NoOfSports - 1];
+
+    res = await agent.get(`/sport/${latestSport.id}`);
+    res = await agent.get(`/sport/sessions/${latestSport.id}`);
+    csrfToken = extractCsrfToken(res);
+    const dateToday = new Date();
+    res = await agent.post(`/createSession/${latestSport.id}`).send({
+      sessionName: "Cricket Session #1",
+      date: new Date(new Date().setDate(dateToday.getDate() + 1)).toISOString(),
+      time: "15:41:00",
+      venue: "Hyderabad",
+      names: "Sneha,Ankith",
+      playersNeeded: 2,
+      _csrf: csrfToken,
+    });
+    groupedTodosResponse1 = await agent
+      .get(`/sport/${latestSport.id}`)
+      .set("Accept", "application/json");
+    parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+    const NoOfSportSessions = parsedGroupedResponse.allUpcoming.length;
+    const latestSession =
+      parsedGroupedResponse.allUpcoming[NoOfSportSessions - 1];
+
+    groupedTodosResponse1 = await agent
+      .get(`/sport/partSession/${latestSession.id}`)
+      .set("Accept", "application/json");
+    parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+    const NoOfPlayers = parsedGroupedResponse.Players.length;
+
+    csrfToken = parsedGroupedResponse.cs;
+    res = await agent.post(`/playerSession/player/${latestSession.id}`).send({
+      _csrf: csrfToken,
+    });
+    groupedTodosResponse1 = await agent
+      .get(`/sport/partSession/${latestSession.id}`)
+      .set("Accept", "application/json");
+    parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+    const NoOfPlayers1 = parsedGroupedResponse.Players.length;
+    expect(NoOfPlayers1).toBe(NoOfPlayers + 1);
+
+    csrfToken = parsedGroupedResponse.cs;
+    const DeletedResponse = await agent
+      .delete(`/playerSession/player/${latestSession.id}`)
       .send({
         _csrf: csrfToken,
       });
