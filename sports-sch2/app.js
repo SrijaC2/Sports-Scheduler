@@ -677,18 +677,24 @@ app.get(
   "/viewReportsResult",
   connectEnsureLogin.ensureLoggedIn(),
   async (request, response) => {
-    try {
-      reports.sort((a, b) => b.count - a.count);
-      console.log(reports);
-      response.render("viewReportsResult", {
+    if (request.accepts("html")) {
+      try {
+        reports.sort((a, b) => b.count - a.count);
+        console.log(reports);
+        response.render("viewReportsResult", {
+          NoOfSess,
+          reports,
+          Date1,
+          Date2,
+          csrfToken: request.csrfToken(),
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      response.json({
         NoOfSess,
-        reports,
-        Date1,
-        Date2,
-        csrfToken: request.csrfToken(),
       });
-    } catch (error) {
-      console.log(error);
     }
   }
 );
