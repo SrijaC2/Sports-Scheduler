@@ -578,7 +578,7 @@ app.post(
         canceled: true,
         message: request.body.message,
       });
-      return response.redirect(`/sport/partSession/${request.params.id}`);
+      return response.redirect(`/sport/${Session.sportId}`);
     } catch (error) {
       console.log(error);
       return response.status(422).json(error);
