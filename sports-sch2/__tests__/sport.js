@@ -131,7 +131,6 @@ describe("Sport Application", function () {
     await login(agent, "user.a@test.com", "12345678");
     let res = await agent.get("/sport");
     res = await agent.get("/createSport");
-    // expect(res.statusCode).toBe(200)
     let csrfToken = extractCsrfToken(res);
     await agent.post("/sport").send({
       title: "Tennis",
@@ -473,6 +472,65 @@ describe("Sport Application", function () {
       });
     const parseRes = Boolean(DeletedResponse.text);
     expect(parseRes).toBe(true);
+  });
+
+  test("Displaying joined sessions at home page", async () => {
+    const agent = request.agent(server);
+    await login(agent, "user.a@test.com", "12345678");
+    let res = await agent.get("/sport");
+    res = await agent.get("/createSport");
+    let csrfToken = extractCsrfToken(res);
+    await agent.post("/sport").send({
+      title: "Cricket",
+      _csrf: csrfToken,
+    });
+    let groupedTodosResponse1 = await agent
+      .get("/sport")
+      .set("Accept", "application/json");
+    let parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+    const NoOfSports = parsedGroupedResponse.allSports.length;
+    const latestSport = parsedGroupedResponse.allSports[NoOfSports - 1];
+
+    res = await agent.get(`/sport/${latestSport.id}`);
+    res = await agent.get(`/sport/sessions/${latestSport.id}`);
+    csrfToken = extractCsrfToken(res);
+    const dateToday = new Date();
+    res = await agent.post(`/createSession/${latestSport.id}`).send({
+      sessionName: "Cricket Session #1",
+      date: new Date(new Date().setDate(dateToday.getDate() + 1)).toISOString(),
+      time: "15:41:00",
+      venue: "Hyderabad",
+      names: "Sneha,Ankith",
+      playersNeeded: 2,
+      _csrf: csrfToken,
+    });
+    groupedTodosResponse1 = await agent
+      .get(`/sport/${latestSport.id}`)
+      .set("Accept", "application/json");
+    parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+    const NoOfSportSessions = parsedGroupedResponse.allUpcoming.length;
+    const latestSession =
+      parsedGroupedResponse.allUpcoming[NoOfSportSessions - 1];
+
+    groupedTodosResponse1 = await agent
+      .get(`/sport/partSession/${latestSession.id}`)
+      .set("Accept", "application/json");
+    parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+
+    csrfToken = parsedGroupedResponse.cs;
+    res = await agent.post(`/playerSession/player/${latestSession.id}`).send({
+      _csrf: csrfToken,
+    });
+    res = await agent.get(`/sport/partSession/${latestSession.id}`);
+    res = await agent.get(`/sport/sessions/${latestSport.id}`);
+    groupedTodosResponse1 = await agent
+      .get(`/sport`)
+      .set("Accept", "application/json");
+    parsedGroupedResponse = JSON.parse(groupedTodosResponse1.text);
+    const NoOfJoinedSessions = parsedGroupedResponse.allUpcoming.length;
+    const latestJoinedSession =
+      parsedGroupedResponse.allUpcoming[NoOfJoinedSessions - 1];
+    expect(latestJoinedSession.id).toBe(latestSession.id);
   });
 
   test("Editing a particular session", async () => {
