@@ -9,5 +9,3 @@ Screenshorts of my application-
 ![Sreenshot of creating a session](https://drive.google.com/uc?export=view&id=1DR1uLhl6Pfv8xxAISIWwKf6kH6Yp1VDY)
 
 Link to the live URL on application- https://srija-sports-scheduler-j8vm.onrender.com
-
-Link to the video demo- https://drive.google.com/file/d/1CPthw-zUzU3TuCaDyI85zZS7fhu10cXC/view?usp=sharing
